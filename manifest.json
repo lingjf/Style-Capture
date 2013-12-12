@@ -1,0 +1,38 @@
+
+{
+  "manifest_version": 2,
+
+  "name": "Style Capture Chrome Extension",
+  
+  "description": "Capture element with style in web page",
+  
+  "version": "1.0",
+
+  "permissions": [
+    "activeTab", "tabs", "http://*/*", "https://*/*", "<all_urls>"
+  ],
+  
+  "background": { 
+  	"scripts": ["background.js"] 
+  },
+  
+  "browser_action": {
+  	"name": "Click to capture",
+    "default_icon": "icon_red.png",
+    // "default_popup": "popup.html",  // If it is set, then onClick will be ignored.
+    "default_title": "Style Capture"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [ "<all_urls>" ],
+      "all_frames": true,
+      "css": [ "style.css"],
+      "js": [ "lib/jquery.js", "lib/jquery.copycss.js", "keycode.js", "selection.js", "content_script.js"]
+    }
+  ],
+  
+  "options_page": "options.html"
+  
+
+}
