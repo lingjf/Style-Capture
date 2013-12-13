@@ -9,12 +9,16 @@ function copyRecurse(element) {
 	var nodeType = element.prop("nodeType");
 	if (nodeType == 1) {
 		var idName = "SC" + (++page.idSeed);
-		result = "#" + idName + " " + element.copyStyle();
+		result = "#" + idName + " " + element.copyStyles();
 		element.contents().each(function(index) {
 			result += copyRecurse($(this));
 		});
 		element.removeAttr('class');
+		element.removeAttr('style');
 		element.prop('id', idName);
+		if (element.attr('src')) {
+			element.attr('src', element.get(0).src);
+		}
 	}
 	return result;
 }
@@ -24,9 +28,13 @@ function copySingled(element) {
 	element.children().remove();
 	// it.empty(); this will remove all sub element including text
 	var idName = "SC" + (++page.idSeed);
-	result = "#" + idName + " " + element.copyStyle();
+	result = "#" + idName + " " + element.copyStyles();
 	element.removeAttr('class');
+	element.removeAttr('style');
 	element.prop('id', idName);
+	if (element.attr('src')) {
+		element.attr('src', element.get(0).src);
+	}
 	return result;
 }
 

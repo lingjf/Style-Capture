@@ -160,13 +160,16 @@ var DomOutline = function(options) {
 			if (self.onCaptured && pub.selected) {
 				self.onCaptured(pub.selected, false);
 			}
+		} else {
+			return false;
 		}
-
+		e.preventDefault();
+		e.stopPropagation();
 		return false;
 	}
 
 	function clickHandler(e) {
-		return true;
+		return false;
 	}
 
 	pub.start = function() {
