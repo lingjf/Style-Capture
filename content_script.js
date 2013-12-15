@@ -5,13 +5,13 @@ var page = {
 };
 
 function copyRecurse(element) {
-	var result = "";
+	var result = [];
 	var nodeType = element.prop("nodeType");
 	if (nodeType == 1) {
 		var idName = "SC" + (++page.idSeed);
-		result = "#" + idName + " " + element.copyStyles();
+		result.push({"id": idName, "computed": element.getFinalStyles()});
 		element.contents().each(function(index) {
-			result += copyRecurse($(this));
+			result = result.concat(copyRecurse($(this)));
 		});
 		element.removeAttr('class');
 		element.removeAttr('style');
@@ -24,11 +24,10 @@ function copyRecurse(element) {
 }
 
 function copySingled(element) {
-	var result = "";
 	element.children().remove();
 	// it.empty(); this will remove all sub element including text
 	var idName = "SC" + (++page.idSeed);
-	result = "#" + idName + " " + element.copyStyles();
+	var result = [{"id": idName, "computed": element.getFinalStyles()}];
 	element.removeAttr('class');
 	element.removeAttr('style');
 	element.prop('id', idName);
@@ -43,9 +42,9 @@ function copyHTMLandCSS(element, recurse) {
 	var cloned = element.clone();
 	element.after(cloned);
 	if (recurse) {
-		hs.style = copyRecurse(cloned);
+		hs.rule = copyRecurse(cloned);
 	} else {
-		hs.style = copySingled(cloned);
+		hs.rule = copySingled(cloned);
 	}
 	hs.html = cloned.prop('outerHTML');
 	cloned.remove();

@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 var htmlTree = "";
-var styleTree = "";
+var ruleList = [];
 
 var openTabs = {};
 
@@ -48,12 +48,12 @@ chrome.tabs.onActivated.addListener(function(info) {
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	if (message.action == "capture") {
+		htmlTree = message.html;
+		ruleList = message.rule;
 		chrome.tabs.create({
 			url : 'capture.html',
 			selected : true
 		});
-		htmlTree = message.html;
-		styleTree = message.style;
 	} else if (message.action == "closed") {
 		chrome.browserAction.setBadgeText({
 			text : ""
