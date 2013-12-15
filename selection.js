@@ -18,18 +18,6 @@ var DomOutline = function(options) {
 		selected : null
 	};
 
-	function writeStylesheet(css) {
-		var element = document.createElement('style');
-		element.type = 'text/css';
-		document.getElementsByTagName('head')[0].appendChild(element);
-
-		if (element.styleSheet) {
-			element.styleSheet.cssText = css; // IE
-		} else {
-			element.innerHTML = css; // Non-IE
-		}
-	}
-
 	function initStylesheet() {
 		if (self.initialized) {
 			return;
@@ -45,7 +33,10 @@ var DomOutline = function(options) {
 				+ '    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);'
 				+ '    z-index: 1000001;' + '}';
 
-		writeStylesheet(css);
+		var element = document.createElement('style');
+		element.type = 'text/css';
+		document.getElementsByTagName('head')[0].appendChild(element);
+		element.innerHTML = css;
 	}
 
 	function createOutline() {

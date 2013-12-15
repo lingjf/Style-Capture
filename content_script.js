@@ -7,7 +7,7 @@ var page = {
 function copyRecurse(element) {
 	var result = [];
 	var nodeType = element.prop("nodeType");
-	if (nodeType == 1) {
+	if (nodeType == Node.ELEMENT_NODE) {
 		var idName = "SC" + (++page.idSeed);
 		result.push({"id": idName, "computed": element.getFinalStyles()});
 		element.contents().each(function(index) {
