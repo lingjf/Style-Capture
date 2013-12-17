@@ -6,7 +6,16 @@
   
   "description": "Capture element with style in web page",
   
-  "version": "1.0",
+  "version": "0.1",
+  
+  "icons": {
+  	"19" : "image/scissor19_default.png",
+    "38" : "image/scissor38_default.png",
+    "64" : "image/scissor64_default.png",
+    "128": "image/scissor128_default.png",
+    "256": "image/scissor256_default.png",
+    "512": "image/scissor512_default.png"
+  },
 
   "permissions": [
     "activeTab", "tabs", "http://*/*", "https://*/*", "<all_urls>"
@@ -18,7 +27,10 @@
   
   "browser_action": {
   	"name": "Click to capture",
-    "default_icon": "icon_red.png",
+    "default_icon": {
+    	"19" : "image/scissor19_default.png",
+    	"38" : "image/scissor38_default.png"
+    }, 
     // "default_popup": "popup.html",  // If it is set, then onClick will be ignored.
     "default_title": "Style Capture"
   },
@@ -33,6 +45,5 @@
   ],
   
   "options_page": "options.html"
-  
 
 }

@@ -30,19 +30,23 @@ function rulestocss(rules) {
 	return result;
 }
 
-$(document).ready(function() {
-	chrome.runtime.getBackgroundPage(function(backgroundPage) {
-		$('body').append(" " + backgroundPage.htmlTree + " ");
-		var rules = backgroundPage.ruleList;
-		setTimeout(function() {
-			for ( var i in rules) {
-				var el = $("#" + rules[i]['id']);
-				rules[i]['defaults'] = el.getFinalStyles();
-			}
-		}, 50);
-		setTimeout(function() {
-			$('head').append(" <style> " + rulestocss(rules) + " </style> ");
-		}, 100);
+$(document).ready(
+		function() {
+			chrome.runtime.getBackgroundPage(function(backgroundPage) {
+				$('body').append(" " + backgroundPage.htmlTree + " ");
+				var rules = backgroundPage.ruleList;
+				setTimeout(function() {
+					for ( var i in rules) {
+						var el = $("#" + rules[i]['id']);
+						rules[i]['defaults'] = el.getFinalStyles();
+					}
+					setTimeout(
+							function() {
+								$('head').append(
+										" <style> " + rulestocss(rules)
+												+ " </style> ");
+							}, 100);
+				}, 50);
 
-	});
-});
+			});
+		});
