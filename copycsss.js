@@ -137,7 +137,7 @@ var CopyCSSS = function(options) {
 
 			return t === r && r === b && b === l;
 		}
-		
+
 		var bc = shorthand_border_color(style);
 		var bw = shorthand_border_width(style);
 		var bs = shorthand_border_style(style);
@@ -151,7 +151,7 @@ var CopyCSSS = function(options) {
 		if (!style["border-style"]) {
 			return;
 		}
-		
+
 		if (!bc && !bw && !bs) {
 			return;
 		}
@@ -336,12 +336,12 @@ var CopyCSSS = function(options) {
 		importCrossOriginLink();
 		self.initialized = true;
 	};
-	
+
 	pub.getFinalStyles = function(element) {
 		var product = {};
 		var dom = element.get(0);
 		var style = window.getComputedStyle(dom, null);
-		for (var i = 0, l = style.length; i < l; i++) {
+		for ( var i = 0, l = style.length; i < l; i++) {
 			var name = style[i];
 			var value = style.getPropertyValue(name);
 			product[name] = value;
@@ -355,7 +355,7 @@ var CopyCSSS = function(options) {
 			var product = {};
 			var dom = element.get(0);
 			var style = window.getDefaultComputedStyle(dom, null);
-			for (var i = 0, l = style.length; i < l; i++) {
+			for ( var i = 0, l = style.length; i < l; i++) {
 				var name = style[i];
 				var value = style.getPropertyValue(name);
 				product[name] = value;
@@ -366,8 +366,8 @@ var CopyCSSS = function(options) {
 		return this.getFinalStyles(element);
 	};
 
-	pub.getPseudoStyles = function(element, type) {
-		var cc = 0;
+	pub.getUserStyles = function(element) {
+		var candidates = [];
 		var product = {};
 		var sheets = document.styleSheets;
 		for ( var i = 0; i < sheets.length; i++) {
@@ -377,16 +377,62 @@ var CopyCSSS = function(options) {
 					continue;
 				var selectors = rules[j].selectorText.split(",");
 				for ( var k = 0; k < selectors.length; k++) {
-					if (selectors[k].indexOf(":" + type) === -1)
+					var selector = selectors[k];
+					if (!element.is(selector))
 						continue;
-					if (!element.is(selectors[k].replace(":" + type, "")))
-						continue;
-					var css = rules[j].style;
-					for ( var l = 0; l < css.length; l++) {
-						product[css[l]] = css[css[l]];
-						cc += 1;
-					}
+					var candidate = SPECIFICITY.calculate(selector)[0];
+					candidate.style = rules[j].style;
+					candidates.push(candidate);
 				}
+			}
+		}
+		candidates.sort(function(a, b) {
+			return parseInt(a.specificity.split(",").join(""), 10)
+					- parseInt(b.specificity.split(",").join(""), 10);
+		});
+		for ( var i = 0; i < candidates.length; i++) {
+			var css = candidates[i].style;
+			for ( var j = 0; j < css.length; j++) {
+				product[css[j]] = css[css[j]];
+			}
+		}
+		shorthand(product);
+		return product;
+	};
+
+	pub.getPseudoStyles = function(element, type) {
+		var cc = 0;
+		var candidates = [];
+		var product = {};
+		var sheets = document.styleSheets;
+		for ( var i = 0; i < sheets.length; i++) {
+			var rules = sheets[i].rules || sheets[i].cssRules;
+			for ( var j = 0; rules && j < rules.length; j++) {
+				if (!rules[j].selectorText)
+					continue;
+				var selectors = rules[j].selectorText.split(",");
+				for ( var k = 0; k < selectors.length; k++) {
+					var selector = selectors[k];
+					if (selector.indexOf(":" + type) === -1)
+						continue;
+					selector = selector.replace(":" + type, "");
+					if (!element.is(selector))
+						continue;
+					var candidate = SPECIFICITY.calculate(selector)[0];
+					candidate.style = rules[j].style;
+					candidates.push(candidate);
+				}
+			}
+		}
+		candidates.sort(function(a, b) {
+			return parseInt(a.specificity.split(",").join(""), 10)
+					- parseInt(b.specificity.split(",").join(""), 10);
+		});
+		for ( var i = 0; i < candidates.length; i++) {
+			var css = candidates[i].style;
+			for ( var j = 0; j < css.length; j++) {
+				product[css[j]] = css[css[j]];
+				cc += 1;
 			}
 		}
 		shorthand(product);
