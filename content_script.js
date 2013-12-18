@@ -1,24 +1,30 @@
-
 var page = {
 	version : "1.0.0",
 	idSeed : 1,
+	copyCSSS : null
 };
 
 function copyRecurse(element) {
 	var result = [];
-	var nodeType = element.prop("nodeType");
-	if (nodeType == Node.ELEMENT_NODE) {
-		var idName = "SC" + (++page.idSeed);
-		result.push({"id": idName, "computed": element.getFinalStyles()});
-		element.contents().each(function(index) {
-			result = result.concat(copyRecurse($(this)));
-		});
-		element.removeAttr('class');
-		element.removeAttr('style');
-		element.prop('id', idName);
-		if (element.attr('src')) {
-			element.attr('src', element.get(0).src);
-		}
+	if (element.prop("nodeType") !== Node.ELEMENT_NODE) {
+		return result;
+	}
+	var id = "SC" + (++page.idSeed);
+	result.push({
+		"id" : id,
+		"computed" : page.copyCSSS.getFinalStyles(element),
+		"hover" : page.copyCSSS.getPseudoStyles(element, "hover"),
+		"focus" : page.copyCSSS.getPseudoStyles(element, "focus"),
+		"active" : page.copyCSSS.getPseudoStyles(element, "active")
+	});
+	element.contents().each(function(index) {
+		result = result.concat(copyRecurse($(this)));
+	});
+	element.removeAttr('class');
+	element.removeAttr('style');
+	element.prop('id', id);
+	if (element.attr('src')) {
+		element.attr('src', element.get(0).src);
 	}
 	return result;
 }
@@ -26,14 +32,21 @@ function copyRecurse(element) {
 function copySingled(element) {
 	element.children().remove();
 	// it.empty(); this will remove all sub element including text
-	var idName = "SC" + (++page.idSeed);
-	var result = [{"id": idName, "computed": element.getFinalStyles()}];
+	var id = "SC" + (++page.idSeed);
+	var result = [ {
+		"id" : id,
+		"computed" : page.copyCSSS.getFinalStyles(element),
+		"hover" : page.copyCSSS.getPseudoStyles(element, "hover"),
+		"focus" : page.copyCSSS.getPseudoStyles(element, "focus"),
+		"active" : page.copyCSSS.getPseudoStyles(element, "active")
+	} ];
 	element.removeAttr('class');
 	element.removeAttr('style');
-	element.prop('id', idName);
+	element.prop('id', id);
 	if (element.attr('src')) {
 		element.attr('src', element.get(0).src);
 	}
+
 	return result;
 }
 
@@ -65,10 +78,13 @@ function initContentScript() {
 		}
 	});
 
+	page.copyCSSS = CopyCSSS();
+
 	chrome.runtime.onMessage
 			.addListener(function(message, sender, sendResponse) {
 				switch (message.action) {
 				case "open":
+					page.copyCSSS.init();
 					domOutline.start();
 					sendResponse({
 						count : "2"
