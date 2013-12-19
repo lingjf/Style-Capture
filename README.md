@@ -1,4 +1,4 @@
-h2ball
+Style-Capture
 ======
 
-Chrome plugin to capture element with style in web page
+Chrome plugin (extension) to capture element with style in web page

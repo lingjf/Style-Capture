@@ -4,6 +4,9 @@ var CopyCSSS = function(options) {
 	var pub = {};
 	var self = {
 		initialized : false,
+		sequence : 0,
+		including : [],
+		excluding : [ "-webkit-perspective-origin", "-webkit-transform-origin" ]
 	};
 
 	// https://developer.mozilla.org/en-US/docs/Web/CSS/Shorthand_properties
@@ -298,7 +301,7 @@ var CopyCSSS = function(options) {
 	function importCrossOriginLink() {
 		var links = document.querySelectorAll("link[rel='stylesheet']");
 
-		for ( var i = 0; i < links.length; i++) {
+		for (var i = 0; i < links.length; i++) {
 			var tmplink = links[i].getAttribute('href');
 			if (tmplink.indexOf('http') === 0) {
 				/* do nothing */
@@ -329,33 +332,25 @@ var CopyCSSS = function(options) {
 		}
 	}
 
-	pub.init = function() {
-		if (self.initialized) {
-			return;
-		}
-		importCrossOriginLink();
-		self.initialized = true;
-	};
-
-	pub.getFinalStyles = function(element) {
+	function getComputedStyles(element) {
 		var product = {};
 		var dom = element.get(0);
 		var style = window.getComputedStyle(dom, null);
-		for ( var i = 0, l = style.length; i < l; i++) {
+		for (var i = 0; i < style.length; i++) {
 			var name = style[i];
 			var value = style.getPropertyValue(name);
 			product[name] = value;
 		}
 		shorthand(product);
 		return product;
-	};
+	}
 
-	pub.getDefaultStyles = function(element) {
+	function getDefaultStyles(element) {
 		if (window.getDefaultComputedStyle) {
 			var product = {};
 			var dom = element.get(0);
 			var style = window.getDefaultComputedStyle(dom, null);
-			for ( var i = 0, l = style.length; i < l; i++) {
+			for (var i = 0; i < style.length; i++) {
 				var name = style[i];
 				var value = style.getPropertyValue(name);
 				product[name] = value;
@@ -363,20 +358,20 @@ var CopyCSSS = function(options) {
 			shorthand(product);
 			return product;
 		}
-		return this.getFinalStyles(element);
-	};
+		return getComputedStyles(element);
+	}
 
-	pub.getUserStyles = function(element) {
+	function getUserStyles(element) {
 		var candidates = [];
 		var product = {};
 		var sheets = document.styleSheets;
-		for ( var i = 0; i < sheets.length; i++) {
+		for (var i = 0; i < sheets.length; i++) {
 			var rules = sheets[i].rules || sheets[i].cssRules;
-			for ( var j = 0; rules && j < rules.length; j++) {
+			for (var j = 0; rules && j < rules.length; j++) {
 				if (!rules[j].selectorText)
 					continue;
 				var selectors = rules[j].selectorText.split(",");
-				for ( var k = 0; k < selectors.length; k++) {
+				for (var k = 0; k < selectors.length; k++) {
 					var selector = selectors[k];
 					if (!element.is(selector))
 						continue;
@@ -390,28 +385,27 @@ var CopyCSSS = function(options) {
 			return parseInt(a.specificity.split(",").join(""), 10)
 					- parseInt(b.specificity.split(",").join(""), 10);
 		});
-		for ( var i = 0; i < candidates.length; i++) {
+		for (var i = 0; i < candidates.length; i++) {
 			var css = candidates[i].style;
-			for ( var j = 0; j < css.length; j++) {
+			for (var j = 0; j < css.length; j++) {
 				product[css[j]] = css[css[j]];
 			}
 		}
 		shorthand(product);
 		return product;
-	};
+	}
 
-	pub.getPseudoStyles = function(element, type) {
-		var cc = 0;
+	function getPseudoClassStyles(element, type) {
 		var candidates = [];
 		var product = {};
 		var sheets = document.styleSheets;
-		for ( var i = 0; i < sheets.length; i++) {
+		for (var i = 0; i < sheets.length; i++) {
 			var rules = sheets[i].rules || sheets[i].cssRules;
-			for ( var j = 0; rules && j < rules.length; j++) {
+			for (var j = 0; rules && j < rules.length; j++) {
 				if (!rules[j].selectorText)
 					continue;
 				var selectors = rules[j].selectorText.split(",");
-				for ( var k = 0; k < selectors.length; k++) {
+				for (var k = 0; k < selectors.length; k++) {
 					var selector = selectors[k];
 					if (selector.indexOf(":" + type) === -1)
 						continue;
@@ -428,15 +422,177 @@ var CopyCSSS = function(options) {
 			return parseInt(a.specificity.split(",").join(""), 10)
 					- parseInt(b.specificity.split(",").join(""), 10);
 		});
-		for ( var i = 0; i < candidates.length; i++) {
+		for (var i = 0; i < candidates.length; i++) {
 			var css = candidates[i].style;
-			for ( var j = 0; j < css.length; j++) {
+			for (var j = 0; j < css.length; j++) {
 				product[css[j]] = css[css[j]];
-				cc += 1;
 			}
 		}
 		shorthand(product);
-		return cc > 0 ? product : null;
+		return product;
+	}
+
+	function getPseudoElementStyles(element, type) {
+		return null;
+	}
+
+	function copyRecurse(element) {
+		var result = [];
+		if (element.prop("nodeType") !== Node.ELEMENT_NODE) {
+			return result;
+		}
+		var id = "SC" + (++self.sequence);
+		result.push({
+			"id" : id,
+			"computed" : getComputedStyles(element),
+			"pseudo_hover" : getPseudoClassStyles(element, "hover"),
+			"pseudo_focus" : getPseudoClassStyles(element, "focus"),
+			"pseudo_active" : getPseudoClassStyles(element, "active"),
+			"pseudo_before" : getPseudoElementStyles(element, "before"),
+			"pseudo_after" : getPseudoElementStyles(element, "after")
+		});
+		element.contents().each(function(index) {
+			result = result.concat(copyRecurse($(this)));
+		});
+		element.removeAttr('class');
+		element.removeAttr('style');
+		element.prop('id', id);
+		if (element.attr('src')) {
+			element.attr('src', element.get(0).src);
+		}
+		return result;
+	}
+
+	function copySingled(element) {
+		element.children().remove();
+		// it.empty(); this will remove all sub element including text
+		var id = "SC" + (++self.sequence);
+		var result = [ {
+			"id" : id,
+			"computed" : getComputedStyles(element),
+			"pseudo_hover" : getPseudoClassStyles(element, "hover"),
+			"pseudo_focus" : getPseudoClassStyles(element, "focus"),
+			"pseudo_active" : getPseudoClassStyles(element, "active"),
+			"pseudo_before" : getPseudoElementStyles(element, "before"),
+			"pseudo_after" : getPseudoElementStyles(element, "after")
+		} ];
+		element.removeAttr('class');
+		element.removeAttr('style');
+		element.prop('id', id);
+		if (element.attr('src')) {
+			element.attr('src', element.get(0).src);
+		}
+		return result;
+	}
+
+	pub.prepare = function() {
+		if (self.initialized) {
+			return;
+		}
+		importCrossOriginLink();
+		self.initialized = true;
+	};
+
+	pub.copyHTMLStyles = function(element, recurse) {
+		var hs = {};
+		self.sequence = 0;
+		var cloned = element.clone();
+		element.after(cloned);
+		if (recurse) {
+			hs.styles = copyRecurse(cloned);
+		} else {
+			hs.styles = copySingled(cloned);
+		}
+		hs.html = cloned.prop('outerHTML');
+		cloned.remove();
+		return hs;
+	};
+
+	pub.simplifyStyles = function(styles) {
+		var rules = [], simplified = [];
+		for ( var i in styles) {
+			var computed = {};
+			var defaults = getDefaultStyles($("#" + styles[i]['id']));
+			for ( var j in styles[i]['computed']) {
+				var modified = styles[i]['computed'][j] !== defaults[j];
+				if (self.including.indexOf(j) > -1
+						|| (modified && self.excluding.indexOf(j) < 0)) {
+					computed[j] = styles[i]['computed'][j];
+				}
+			}
+			if (!jQuery.isEmptyObject(computed)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] ],
+					rule : computed,
+					json : JSON.stringify(computed)
+				});
+			}
+			var pseudo_hover = styles[i]['pseudo_hover'];
+			if (!jQuery.isEmptyObject(pseudo_hover)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":hover" ],
+					rule : pseudo_hover,
+					json : JSON.stringify(pseudo_hover)
+				});
+			}
+			var pseudo_focus = styles[i]['pseudo_focus'];
+			if (!jQuery.isEmptyObject(pseudo_focus)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":focus" ],
+					rule : pseudo_focus,
+					json : JSON.stringify(pseudo_focus)
+				});
+			}
+			var pseudo_active = styles[i]['pseudo_active'];
+			if (!jQuery.isEmptyObject(pseudo_active)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":active" ],
+					rule : pseudo_active,
+					json : JSON.stringify(pseudo_active)
+				});
+			}
+			var pseudo_before = styles[i]['pseudo_before'];
+			if (!jQuery.isEmptyObject(pseudo_before)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":before" ],
+					rule : pseudo_before,
+					json : JSON.stringify(pseudo_before)
+				});
+			}
+			var pseudo_after = styles[i]['pseudo_after'];
+			if (!jQuery.isEmptyObject(pseudo_after)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":after" ],
+					rule : pseudo_after,
+					json : JSON.stringify(pseudo_after)
+				});
+			}
+		}
+
+		for ( var i in rules) {
+			var merged = false;
+			for ( var j in simplified) {
+				if (simplified[j].json === rules[i].json) {
+					simplified[j].selector.push(rules[i].selector[0]);
+					merged = true;
+					break;
+				}
+			}
+			if (!merged) {
+				simplified.push(rules[i]);
+			}
+		}
+
+		var result = "";
+		for ( var i in simplified) {
+			result += simplified[i].selector.join(", ") + " {\n";
+			for ( var j in simplified[i].rule) {
+				result += "    " + j + ": " + simplified[i].rule[j] + ";\n";
+			}
+			result += "}\n";
+		}
+		return result;
+
 	};
 
 	return pub;
