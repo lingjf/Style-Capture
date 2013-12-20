@@ -44,8 +44,6 @@
     }
   ],
   
-  // "content_security_policy": "script-src 'self'; object-src 'self'; style-src 'self';", 
-  
   "options_page": "options.html"
 
 }

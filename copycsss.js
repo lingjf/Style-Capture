@@ -10,7 +10,7 @@ var CopyCSSS = function(options) {
 	};
 
 	// https://developer.mozilla.org/en-US/docs/Web/CSS/Shorthand_properties
-	function merge(a, b, c, d) {
+	function merge4(a, b, c, d) {
 		if (a === b && b === c && c === d) {
 			return [ a ];
 		} else if (a === c && b === d) {
@@ -20,8 +20,56 @@ var CopyCSSS = function(options) {
 		}
 	}
 
+	function merge2(a, b) {
+		if (a === b) {
+			return [ a ];
+		} else {
+			return [ a, b ];
+		}
+	}
+
+	function color_plus_keyword(color) {
+		var keyword = "";
+		try {
+			keyword = pusher.color(color).html('keyword');
+		} catch (e) {
+
+		}
+		return color + "/* " + keyword + " */";
+	}
+
 	function shorthand_background(style) {
-		var l = [];
+		// (function shorthand_background_repeat(style) {
+		// if (!style["background-repeat-x"]) {
+		// return;
+		// }
+		// if (!style["background-repeat-y"]) {
+		// return;
+		// }
+		// var x = style["background-repeat-x"];
+		// var y = style["background-repeat-y"];
+		//
+		// style["background-repeat"] = merge2(x, y).join(" ");
+		//
+		// delete style["background-repeat-x"];
+		// delete style["background-repeat-y"];
+		// })(style);
+		// (function shorthand_background_position(style) {
+		// if (!style["background-position-x"]) {
+		// return;
+		// }
+		// if (!style["background-position-y"]) {
+		// return;
+		// }
+		// var x = style["background-position-x"];
+		// var y = style["background-position-y"];
+		//
+		// style["background-position"] = [x, y].join(" ");
+		//
+		// delete style["background-position-x"];
+		// delete style["background-position-y"];
+		// })(style);
+
 		if (!style["background-color"]) {
 			return;
 		}
@@ -37,7 +85,8 @@ var CopyCSSS = function(options) {
 		if (!style["background-position"]) {
 			return;
 		}
-		l.push(style["background-color"]);
+		var l = [];
+		l.push(color_plus_keyword(style["background-color"]));
 		l.push(style["background-image"]);
 		l.push(style["background-repeat"]);
 		l.push(style["background-attachment"]);
@@ -70,19 +119,20 @@ var CopyCSSS = function(options) {
 				return false;
 			}
 
-			var t = style["border-top-color"];
-			var r = style["border-right-color"];
-			var b = style["border-bottom-color"];
-			var l = style["border-left-color"];
+			var t = color_plus_keyword(style["border-top-color"]);
+			var r = color_plus_keyword(style["border-right-color"]);
+			var b = color_plus_keyword(style["border-bottom-color"]);
+			var l = color_plus_keyword(style["border-left-color"]);
 
-			style["border-color"] = merge(t, r, b, l).join(" ");
+			var m = merge4(t, r, b, l);
+			style["border-color"] = m.join(" ");
 
 			delete style["border-top-color"];
 			delete style["border-right-color"];
 			delete style["border-bottom-color"];
 			delete style["border-left-color"];
 
-			return t === r && r === b && b === l;
+			return m.length === 1;
 		}
 		function shorthand_border_style(style) {
 			if (!style["border-top-style"]) {
@@ -103,14 +153,15 @@ var CopyCSSS = function(options) {
 			var b = style["border-bottom-style"];
 			var l = style["border-left-style"];
 
-			style["border-style"] = merge(t, r, b, l).join(" ");
+			var m = merge4(t, r, b, l);
+			style["border-style"] = m.join(" ");
 
 			delete style["border-top-style"];
 			delete style["border-right-style"];
 			delete style["border-bottom-style"];
 			delete style["border-left-style"];
 
-			return t === r && r === b && b === l;
+			return m.length === 1;
 		}
 		function shorthand_border_width(style) {
 			if (!style["border-top-width"]) {
@@ -131,14 +182,15 @@ var CopyCSSS = function(options) {
 			var b = style["border-bottom-width"];
 			var l = style["border-left-width"];
 
-			style["border-width"] = merge(t, r, b, l).join(" ");
+			var m = merge4(t, r, b, l);
+			style["border-width"] = m.join(" ");
 
 			delete style["border-top-width"];
 			delete style["border-right-width"];
 			delete style["border-bottom-width"];
 			delete style["border-left-width"];
 
-			return t === r && r === b && b === l;
+			return m.length === 1;
 		}
 
 		var bc = shorthand_border_color(style);
@@ -197,7 +249,7 @@ var CopyCSSS = function(options) {
 		var br = style["border-bottom-right-radius"];
 		var bl = style["border-bottom-left-radius"];
 
-		var l = merge(tl, tr, br, bl);
+		var l = merge4(tl, tr, br, bl);
 
 		style["border-radius"] = l.join(" ");
 		style["-moz-border-radius"] = l.join(" ");
@@ -228,7 +280,7 @@ var CopyCSSS = function(options) {
 		var b = style["margin-bottom"];
 		var l = style["margin-left"];
 
-		style["margin"] = merge(t, r, b, l).join(" ");
+		style["margin"] = merge4(t, r, b, l).join(" ");
 
 		delete style["margin-top"];
 		delete style["margin-right"];
@@ -255,7 +307,7 @@ var CopyCSSS = function(options) {
 		var b = style["padding-bottom"];
 		var l = style["padding-left"];
 
-		style["padding"] = merge(t, r, b, l).join(" ");
+		style["padding"] = merge4(t, r, b, l).join(" ");
 
 		delete style["padding-top"];
 		delete style["padding-right"];
@@ -276,15 +328,23 @@ var CopyCSSS = function(options) {
 			return;
 		}
 
-		var c = style["outline-color"];
+		var c = color_plus_keyword(style["outline-color"]);
 		var w = style["outline-width"];
 		var s = style["outline-style"];
-
-		style["outline"] = [ c, w, s ].join(" ");
-
+		if (parseInt(w) !== 0) {
+			style["outline"] = [ c, w, s ].join(" ");
+		}
 		delete style["outline-color"];
 		delete style["outline-style"];
 		delete style["outline-width"];
+	}
+
+	function shorthand_color(style) {
+		if (!style["color"]) {
+			return;
+		}
+
+		style["color"] = color_plus_keyword(style["color"]);
 	}
 
 	function shorthand(style) {
@@ -296,6 +356,8 @@ var CopyCSSS = function(options) {
 		shorthand_padding(style);
 		shorthand_font(style);
 		shorthand_outline(style);
+
+		shorthand_color(style);
 	}
 
 	function importCrossOriginLink() {
@@ -341,7 +403,6 @@ var CopyCSSS = function(options) {
 			var value = style.getPropertyValue(name);
 			product[name] = value;
 		}
-		shorthand(product);
 		return product;
 	}
 
@@ -355,7 +416,6 @@ var CopyCSSS = function(options) {
 				var value = style.getPropertyValue(name);
 				product[name] = value;
 			}
-			shorthand(product);
 			return product;
 		}
 		return getComputedStyles(element);
@@ -391,7 +451,6 @@ var CopyCSSS = function(options) {
 				product[css[j]] = css[css[j]];
 			}
 		}
-		shorthand(product);
 		return product;
 	}
 
@@ -428,7 +487,6 @@ var CopyCSSS = function(options) {
 				product[css[j]] = css[css[j]];
 			}
 		}
-		shorthand(product);
 		return product;
 	}
 
@@ -512,7 +570,9 @@ var CopyCSSS = function(options) {
 		var rules = [], simplified = [];
 		for ( var i in styles) {
 			var computed = {};
+			shorthand(styles[i]['computed']);
 			var defaults = getDefaultStyles($("#" + styles[i]['id']));
+			shorthand(defaults);
 			for ( var j in styles[i]['computed']) {
 				var modified = styles[i]['computed'][j] !== defaults[j];
 				if (self.including.indexOf(j) > -1
@@ -529,6 +589,7 @@ var CopyCSSS = function(options) {
 			}
 			var pseudo_hover = styles[i]['pseudo_hover'];
 			if (!jQuery.isEmptyObject(pseudo_hover)) {
+				shorthand(pseudo_hover);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":hover" ],
 					rule : pseudo_hover,
@@ -537,6 +598,7 @@ var CopyCSSS = function(options) {
 			}
 			var pseudo_focus = styles[i]['pseudo_focus'];
 			if (!jQuery.isEmptyObject(pseudo_focus)) {
+				shorthand(pseudo_focus);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":focus" ],
 					rule : pseudo_focus,
@@ -545,6 +607,7 @@ var CopyCSSS = function(options) {
 			}
 			var pseudo_active = styles[i]['pseudo_active'];
 			if (!jQuery.isEmptyObject(pseudo_active)) {
+				shorthand(pseudo_active);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":active" ],
 					rule : pseudo_active,
@@ -553,6 +616,7 @@ var CopyCSSS = function(options) {
 			}
 			var pseudo_before = styles[i]['pseudo_before'];
 			if (!jQuery.isEmptyObject(pseudo_before)) {
+				shorthand(pseudo_before);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":before" ],
 					rule : pseudo_before,
@@ -561,6 +625,7 @@ var CopyCSSS = function(options) {
 			}
 			var pseudo_after = styles[i]['pseudo_after'];
 			if (!jQuery.isEmptyObject(pseudo_after)) {
+				shorthand(pseudo_after);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":after" ],
 					rule : pseudo_after,

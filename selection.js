@@ -104,12 +104,12 @@ var DomOutline = function(options) {
 								+ index + "'>" + this.tagName.toLowerCase()
 								+ "</div>" + label_text;
 					});
-			label_text = label_text
-					+ "<div class='DomOutline_node'>"
-					+ pub.selected.get(0).tagName.toLowerCase()
-					+ "</div>"
-					+ "<div class='DomOutline_node' cap='singled'> &#8731; </div>"
-					+ "<div class='DomOutline_node' cap='recurse'> &#8732; </div>";
+			label_text = label_text + "<div class='DomOutline_node'>"
+					+ pub.selected.get(0).tagName.toLowerCase() + "</div>";
+			// label_text += "<div class='DomOutline_node' cap='singled'>
+			// &#8731; </div>";
+			// label_text += "<div class='DomOutline_node' cap='recurse'>
+			// &#8732; </div>";
 		}
 
 		var top = pos.top + scroll_top;
@@ -128,12 +128,12 @@ var DomOutline = function(options) {
 			}
 			return false;
 		});
-		$("div.DomOutline_node[cap='singled']").click(function() {
-			self.onCaptured(pub.selected, false);
-		});
-		$("div.DomOutline_node[cap='recurse']").click(function() {
-			self.onCaptured(pub.selected, true);
-		});
+		// $("div.DomOutline_node[cap='singled']").click(function() {
+		// self.onCaptured(pub.selected, false);
+		// });
+		// $("div.DomOutline_node[cap='recurse']").click(function() {
+		// self.onCaptured(pub.selected, true);
+		//		});
 		self.elements.top.css({
 			top : Math.max(0, top - b),
 			left : pos.left - b,
@@ -198,7 +198,7 @@ var DomOutline = function(options) {
 
 	function stepSelection(ud) {
 		var index = -1;
-		for (var i = 0; i < self.stacked.length; i++) {
+		for ( var i = 0; i < self.stacked.length; i++) {
 			if (pub.selected.is(self.stacked[i])) {
 				index = i;
 				break;
