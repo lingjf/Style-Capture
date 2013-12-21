@@ -6,7 +6,171 @@ var CopyCSSS = function(options) {
 		initialized : false,
 		sequence : 0,
 		including : [],
-		excluding : [ "-webkit-perspective-origin", "-webkit-transform-origin" ]
+		excluding : [ "-webkit-perspective-origin", "-webkit-transform-origin",
+				"-webkit-column-rule-color", "-webkit-font-smoothing",
+				"-webkit-locale", "-webkit-tap-highlight-color",
+				"-webkit-text-emphasis-color", "-webkit-text-fill-color",
+				"-webkit-text-stroke-color",
+				"-webkit-text-decorations-in-effect" ]
+	};
+
+	function isLegalColor(value) {
+		try {
+			pusher.color(value).html();
+		} catch (e) {
+			return false;
+		}
+		return true;
+	}
+	function isTransparent(value) {
+		var value_rgba, transparent_rgba;
+		try {
+			value_rgba = pusher.color(value).html('rgba');
+			transparent_rgba = pusher.color('rgba(0,0,0,0)').html('rgba');
+		} catch (e) {
+			return false;
+		}
+		return value_rgba === transparent_rgba;
+	}
+	function isPercentage(value) {
+		return /^[+-]?\d+(\.?\d+)?%$/.test(value);
+	}
+	function isLength(value) {
+		return /^[+-]?\d+(\.?\d+)?(px|em|pt|pc|in|cm|mm)?$/.test(value);
+	}
+
+	function isInitial(property, value) {
+		if (property["isInitial"])
+			return property["isInitial"](value);
+		if (Array.isArray(property["initial"]))
+			return property["initial"].indexOf(value) > -1;
+		return value === property["initial"];
+	}
+	function isLegal(property, value) {
+		if (property["isLegal"])
+			return property["isLegal"](value);
+		if (Array.isArray(property["legals"]))
+			return property["legals"].indexOf(value) > -1;
+		return value === property["legals"];
+	}
+
+	var css_properties = {
+		// http://www.w3.org/TR/CSS2/propidx.html
+		"background-attachment" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "scroll", "initial" ],
+			"legals" : [ "scroll", "fixed", "inherit", "initial" ],
+		},
+		"background-color" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "transparent", "initial" ],
+			"isInitial" : function(v) {
+				if ([ "transparent", "initial" ].indexOf(v) > -1)
+					return true;
+				return isTransparent(v);
+			},
+			"isLegal" : function(v) {
+				if ([ "transparent", "inherit", "initial" ].indexOf(v) > -1)
+					return true;
+				return isLegalColor(v);
+			}
+		},
+		"background-image" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "none", "initial" ],
+			"isLegal" : function(v) {
+				if ([ "none", "inherit", "initial" ].indexOf(v) > -1)
+					return true;
+				return v.indexOf("url") === 0;
+			}
+		},
+		"background-position" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "0% 0%" ],
+			"isInitial" : function(v) {
+				var parts = v.split(" ");
+				if (parts.length !== 2)
+					return false;
+				function toPercentage(x) {
+					if (isLength(x))
+						return '' + parseInt(x) * 100 + '%';
+					if (x === "left" || x === "top")
+						return "0%";
+					if (x === "right" || x === "bottom")
+						return "100%";
+					if (x === "center")
+						return "50%";
+					return x;
+				}
+				var l = [ toPercentage(parts[0]), toPercentage(parts[1]) ]
+						.join(" ");
+				return l === "0% 0%" || l === "initial, initial";
+			},
+			"isLegal" : function(v) {
+				var keywords = [ "left", "right", "top", "bottom", "center",
+						"inherit", "initial" ];
+				var parts = v.split(" ");
+				for ( var i in parts) {
+					if (!isPercentage(parts[i]) && !isLength(parts[i])
+							&& keywords.indexOf(parts[i]) === -1)
+						return false;
+				}
+				return true;
+			}
+		},
+		"background-position-x" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "0%" ],
+			"isInitial" : function(v) {
+				return v === "0%" || v === "left" || v === "initial"
+						|| (isLength(v) && parseInt(v) === 0);
+			},
+			"isLegal" : function(v) {
+				var keywords = [ "left", "right", "center", "inherit",
+						"initial" ];
+				return isPercentage(v) || isLength(v)
+						|| keywords.indexOf(v) > -1;
+			}
+		},
+		"background-position-y" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "0%" ],
+			"isInitial" : function(v) {
+				return v === "0%" || v === "top" || v === "initial"
+						|| (isLength(v) && parseInt(v) === 0);
+			},
+			"isLegal" : function(v) {
+				var keywords = [ "top", "bottom", "center", "inherit",
+						"initial" ];
+				return isPercentage(v) || isLength(v)
+						|| keywords.indexOf(v) > -1;
+			}
+		},
+		"background-repeat" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "repeat", "initial" ],
+			"legals" : [ "repeat", "repeat-x", "repeat-y", "no-repeat",
+					"inherit" ]
+		},
+		"background-repeat-x" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "repeat", "initial" ],
+			"legals" : [ "repeat", "no-repeat", "inherit", "initial" ]
+		},
+		"background-repeat-y" : {
+			"appliesto" : [],
+			"inherited" : false,
+			"initial" : [ "repeat", "initial" ],
+			"legals" : [ "repeat", "no-repeat", "inherit", "initial" ]
+		}
 	};
 
 	// https://developer.mozilla.org/en-US/docs/Web/CSS/Shorthand_properties
@@ -39,66 +203,114 @@ var CopyCSSS = function(options) {
 	}
 
 	function shorthand_background(style) {
-		// (function shorthand_background_repeat(style) {
-		// if (!style["background-repeat-x"]) {
-		// return;
-		// }
-		// if (!style["background-repeat-y"]) {
-		// return;
-		// }
-		// var x = style["background-repeat-x"];
-		// var y = style["background-repeat-y"];
-		//
-		// style["background-repeat"] = merge2(x, y).join(" ");
-		//
-		// delete style["background-repeat-x"];
-		// delete style["background-repeat-y"];
-		// })(style);
-		// (function shorthand_background_position(style) {
-		// if (!style["background-position-x"]) {
-		// return;
-		// }
-		// if (!style["background-position-y"]) {
-		// return;
-		// }
-		// var x = style["background-position-x"];
-		// var y = style["background-position-y"];
-		//
-		// style["background-position"] = [x, y].join(" ");
-		//
-		// delete style["background-position-x"];
-		// delete style["background-position-y"];
-		// })(style);
+		(function shorthand_background_repeat(style) {
+			var x = style["background-repeat-x"];
+			var y = style["background-repeat-y"];
+			var z = style["background-repeat"];
 
-		if (!style["background-color"]) {
-			return;
-		}
-		if (!style["background-image"]) {
-			return;
-		}
-		if (!style["background-repeat"]) {
-			return;
-		}
-		if (!style["background-attachment"]) {
-			return;
-		}
-		if (!style["background-position"]) {
-			return;
-		}
-		var l = [];
-		l.push(color_plus_keyword(style["background-color"]));
-		l.push(style["background-image"]);
-		l.push(style["background-repeat"]);
-		l.push(style["background-attachment"]);
-		l.push(style["background-position"]);
+			if (!z && (x || y)) {
+				if (!x || isInitial(css_properties["background-repeat-x"], x)) {
+					x = css_properties["background-repeat-x"]["initial"][0];
+				}
+				if (!y || isInitial(css_properties["background-repeat-y"], y)) {
+					y = css_properties["background-repeat-y"]["initial"][0];
+				}
 
-		style["background"] = l.join(" ");
+				if (x === "repeat" && y === "repeat") {
+					z = "repeat";
+				} else if (x === "repeat" && y === "no-repeat") {
+					z = "repeat-x";
+				} else if (x === "no-repeat" && y === "repeat") {
+					z = "repeat-y";
+				} else {
+					z = "no-repeat";
+				}
 
-		delete style["background-color"];
-		delete style["background-image"];
-		delete style["background-repeat"];
-		delete style["background-attachment"];
-		delete style["background-position"];
+				style["background-repeat"] = z;
+			}
+			delete style["background-repeat-x"];
+			delete style["background-repeat-y"];
+		})(style);
+
+		(function shorthand_background_position(style) {
+			var x = style["background-position-x"];
+			var y = style["background-position-y"];
+			var z = style["background-position"];
+			if (!z && (x || y)) {
+				if (!x || isInitial(css_properties["background-position-x"], x)) {
+					x = css_properties["background-position-x"]["initial"][0];
+				}
+				if (!y || isInitial(css_properties["background-position-y"], y)) {
+					y = css_properties["background-position-y"]["initial"][0];
+				}
+
+				style["background-position"] = [ x, y ].join(" ");
+			}
+			delete style["background-position-x"];
+			delete style["background-position-y"];
+		})(style);
+
+		var c = style["background-color"];
+		var i = style["background-image"];
+		var r = style["background-repeat"];
+		var a = style["background-attachment"];
+		var p = style["background-position"];
+		var z = style["background"];
+
+		if (!z) {
+			var l = [];
+			if (c) {
+				if (isInitial(css_properties["background-color"], c)) {
+					delete style["background-color"];
+				} else {
+					c = color_plus_keyword(c);
+					style["background-color"] = c;
+					l.push(c);
+				}
+			}
+			if (i) {
+				if (isInitial(css_properties["background-image"], i)) {
+					delete style["background-image"];
+				} else {
+					l.push(i);
+				}
+			}
+			if (r) {
+				if (isInitial(css_properties["background-repeat"], r)) {
+					delete style["background-repeat"];
+				} else {
+					l.push(r);
+				}
+			}
+			if (a) {
+				if (isInitial(css_properties["background-attachment"], a)) {
+					delete style["background-attachment"];
+				} else {
+					l.push(a);
+				}
+			}
+			if (p) {
+				if (isInitial(css_properties["background-position"], p)) {
+					delete style["background-position"];
+				} else {
+					l.push(p);
+				}
+			}
+			if (l.length > 1) {
+				style["background"] = l.join(" ");
+				delete style["background-color"];
+				delete style["background-image"];
+				delete style["background-repeat"];
+				delete style["background-attachment"];
+				delete style["background-position"];
+			}
+		} else {
+			delete style["background-color"];
+			delete style["background-image"];
+			delete style["background-repeat"];
+			delete style["background-attachment"];
+			delete style["background-position"];
+		}
 		delete style["background-clip"];
 		delete style["background-origin"];
 		delete style["background-size"];
@@ -363,7 +575,7 @@ var CopyCSSS = function(options) {
 	function importCrossOriginLink() {
 		var links = document.querySelectorAll("link[rel='stylesheet']");
 
-		for (var i = 0; i < links.length; i++) {
+		for ( var i = 0; i < links.length; i++) {
 			var tmplink = links[i].getAttribute('href');
 			if (tmplink.indexOf('http') === 0) {
 				/* do nothing */
@@ -398,7 +610,7 @@ var CopyCSSS = function(options) {
 		var product = {};
 		var dom = element.get(0);
 		var style = window.getComputedStyle(dom, null);
-		for (var i = 0; i < style.length; i++) {
+		for ( var i = 0; i < style.length; i++) {
 			var name = style[i];
 			var value = style.getPropertyValue(name);
 			product[name] = value;
@@ -411,7 +623,7 @@ var CopyCSSS = function(options) {
 			var product = {};
 			var dom = element.get(0);
 			var style = window.getDefaultComputedStyle(dom, null);
-			for (var i = 0; i < style.length; i++) {
+			for ( var i = 0; i < style.length; i++) {
 				var name = style[i];
 				var value = style.getPropertyValue(name);
 				product[name] = value;
@@ -425,13 +637,13 @@ var CopyCSSS = function(options) {
 		var candidates = [];
 		var product = {};
 		var sheets = document.styleSheets;
-		for (var i = 0; i < sheets.length; i++) {
+		for ( var i = 0; i < sheets.length; i++) {
 			var rules = sheets[i].rules || sheets[i].cssRules;
-			for (var j = 0; rules && j < rules.length; j++) {
+			for ( var j = 0; rules && j < rules.length; j++) {
 				if (!rules[j].selectorText)
 					continue;
 				var selectors = rules[j].selectorText.split(",");
-				for (var k = 0; k < selectors.length; k++) {
+				for ( var k = 0; k < selectors.length; k++) {
 					var selector = selectors[k];
 					if (!element.is(selector))
 						continue;
@@ -445,9 +657,9 @@ var CopyCSSS = function(options) {
 			return parseInt(a.specificity.split(",").join(""), 10)
 					- parseInt(b.specificity.split(",").join(""), 10);
 		});
-		for (var i = 0; i < candidates.length; i++) {
+		for ( var i = 0; i < candidates.length; i++) {
 			var css = candidates[i].style;
-			for (var j = 0; j < css.length; j++) {
+			for ( var j = 0; j < css.length; j++) {
 				product[css[j]] = css[css[j]];
 			}
 		}
@@ -458,13 +670,13 @@ var CopyCSSS = function(options) {
 		var candidates = [];
 		var product = {};
 		var sheets = document.styleSheets;
-		for (var i = 0; i < sheets.length; i++) {
+		for ( var i = 0; i < sheets.length; i++) {
 			var rules = sheets[i].rules || sheets[i].cssRules;
-			for (var j = 0; rules && j < rules.length; j++) {
+			for ( var j = 0; rules && j < rules.length; j++) {
 				if (!rules[j].selectorText)
 					continue;
 				var selectors = rules[j].selectorText.split(",");
-				for (var k = 0; k < selectors.length; k++) {
+				for ( var k = 0; k < selectors.length; k++) {
 					var selector = selectors[k];
 					if (selector.indexOf(":" + type) === -1)
 						continue;
@@ -481,9 +693,9 @@ var CopyCSSS = function(options) {
 			return parseInt(a.specificity.split(",").join(""), 10)
 					- parseInt(b.specificity.split(",").join(""), 10);
 		});
-		for (var i = 0; i < candidates.length; i++) {
+		for ( var i = 0; i < candidates.length; i++) {
 			var css = candidates[i].style;
-			for (var j = 0; j < css.length; j++) {
+			for ( var j = 0; j < css.length; j++) {
 				product[css[j]] = css[css[j]];
 			}
 		}
