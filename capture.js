@@ -1,20 +1,26 @@
 var Captured;
 
+SyntaxHighlighter.defaults['toolbar'] = false;
+SyntaxHighlighter.defaults['ruler'] = true;
+
 $(document).ready(
 		function() {
 			chrome.runtime.getBackgroundPage(function(backgroundPage) {
 				Captured = backgroundPage.Captured;
+
 				$('.captured#outlook').append(" " + Captured.html + " ");
-				setTimeout(function() {
-					Captured.css = "<style>\n"
-							+ CopyCSSS().simplifyStyles(Captured.styles)
-							+ "\n</style>";
-					$('head').append(Captured.css);
-					
-					$('.captured#htmlcss pre').text(Captured.css + "\n" + Captured.html);
-				}, 50);
-				
-				
+
+				Captured.css = "<style>\n"
+						+ CopyCSSS().simplifyStyles(Captured.styles)
+						+ "\n</style>";
+				$('head').append(Captured.css);
+
+				$('.captured#htmlcss pre:nth-child(1)').html(Captured.css);
+
+				$('.captured#htmlcss pre:nth-child(2)').html(Captured.html);
+
+				SyntaxHighlighter.highlight();
+
 			});
 
 			$('#controls #source').click(function() {
@@ -24,4 +30,5 @@ $(document).ready(
 				$('#controls #clipboard').toggle();
 				$('#controls #download').toggle();
 			});
+
 		});

@@ -1,10 +1,26 @@
 <html>
 <head>
 	<title>Captured</title>
+	
 	<script src="lib/jquery.js"></script>
 	<script src="lib/pusher.color.js"></script>
+	<script type="text/javascript" src="lib/syntaxhighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="lib/syntaxhighlighter/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="lib/syntaxhighlighter/scripts/shBrushXml.js"></script>
+	<script type="text/javascript" src="lib/syntaxhighlighter/scripts/shBrushJScript.js"></script>
 	<script src="copycsss.js"></script>
 	<script src="capture.js"></script>
+	
+	<link type="text/css" rel="stylesheet" href="lib/syntaxhighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="lib/syntaxhighlighter/styles/shThemeDefault.css"/>
+	
+	<style>
+		<!-- SyntaxHighlighter Issue Patch : remove unusable vertical scrollbar -->
+		.syntaxhighlighter { 
+			overflow-y: hidden !important; 
+			overflow-x: auto !important; 
+		}
+	</style>
 	
 	<style>
 		body {
@@ -25,19 +41,16 @@
 		}
 		.captured#htmlcss {
 			display: none;
-			overflow-y: scroll;
+			overflow-y: hidden;
 		}
 		#controls {
-			// border : 1px dashed forestgreen;
 			position : fixed;
 			bottom : 0;
 			right : 0;
 		}	
 		#controls div {
-			// border : 1px dashed pink;
 			width : 64px;
 			height : 64px;
-			position : relative;
 		}
 		#controls #source.close, #controls #source.open:hover {
 			background-image : url('image/source_green_default.png');
@@ -65,7 +78,10 @@
 
 <body>
 	<div class='captured' id='outlook'></div>
-	<div class='captured' id='htmlcss'><pre></pre></div>
+	<div class='captured' id='htmlcss'>
+		<pre class="brush: css;"></pre>
+		<pre class="brush: html;"></pre>
+	</div>
 	<div id='controls'> 
 		<div id='download'> </div>
 		<div id='clipboard'> </div>
