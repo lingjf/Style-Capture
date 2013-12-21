@@ -27,8 +27,19 @@ $(document).ready(
 				$(this).toggleClass('close open');
 				$('.captured#outlook').toggle();
 				$('.captured#htmlcss').toggle();
+				$('#controls #clipboard').removeClass('copied');
 				$('#controls #clipboard').toggle();
 				$('#controls #download').toggle();
+			});
+
+			$('#controls #clipboard').click(function() {
+				$('body').append('<textarea id="clipboard_template"/>');
+				var clipboard_template = $('#clipboard_template');
+				clipboard_template.text(Captured.css + "\n" + Captured.html);
+				clipboard_template.select();
+				document.execCommand('copy');
+				clipboard_template.remove();
+				$(this).addClass('copied');
 			});
 
 		});

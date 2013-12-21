@@ -41,7 +41,6 @@
 		}
 		.captured#htmlcss {
 			display: none;
-			overflow-y: hidden;
 		}
 		#controls {
 			position : fixed;
@@ -62,7 +61,7 @@
 			display : none;
 			background-image : url('image/clipboard_green_default.png');
 		}
-		#controls #clipboard:hover {
+		#controls #clipboard:hover, #controls #clipboard.copied {
 			background-image : url('image/clipboard_green_actived.png');
 		}
 		#controls #download {
