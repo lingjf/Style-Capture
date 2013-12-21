@@ -5,10 +5,73 @@
 	<script src="lib/pusher.color.js"></script>
 	<script src="copycsss.js"></script>
 	<script src="capture.js"></script>
+	
+	<style>
+		body {
+			width : 100%;
+			height : 100%;
+			margin : 0;
+			border : 0;
+			padding : 0;
+		}
+		.captured {
+			//border : 1px dashed skyblue;
+			//width : 99%;
+			//height : 99%;
+			//min-height : 99%;
+		}
+		.captured#outlook {
+			padding : 20px 10px;
+		}
+		.captured#htmlcss {
+			display: none;
+			overflow-y: scroll;
+		}
+		#controls {
+			// border : 1px dashed forestgreen;
+			position : fixed;
+			bottom : 0;
+			right : 0;
+		}	
+		#controls div {
+			// border : 1px dashed pink;
+			width : 64px;
+			height : 64px;
+			position : relative;
+		}
+		#controls #source.close, #controls #source.open:hover {
+			background-image : url('image/source_green_default.png');
+		}
+		#controls #source.close:hover, #controls #source.open {
+			background-image : url('image/source_green_actived.png');
+		}
+		#controls #clipboard {
+			display : none;
+			background-image : url('image/clipboard_green_default.png');
+		}
+		#controls #clipboard:hover {
+			background-image : url('image/clipboard_green_actived.png');
+		}
+		#controls #download {
+			display : none;
+			background-image : url('image/download_green_default.png');
+		}
+		#controls #download:hover {
+			background-image : url('image/download_green_actived.png');
+		}
+	</style>
+	
 </head>
 
 <body>
-
+	<div class='captured' id='outlook'></div>
+	<div class='captured' id='htmlcss'><pre></pre></div>
+	<div id='controls'> 
+		<div id='download'> </div>
+		<div id='clipboard'> </div>
+		<div id='source' class='close'> </div>
+	</div>
+	
 </body>
 
 </html>

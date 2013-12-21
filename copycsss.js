@@ -33,7 +33,7 @@ var CopyCSSS = function(options) {
 		try {
 			keyword = pusher.color(color).html('keyword');
 		} catch (e) {
-
+			return color;
 		}
 		return color + "/* " + keyword + " */";
 	}
