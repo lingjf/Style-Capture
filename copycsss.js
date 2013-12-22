@@ -5,6 +5,7 @@ var CopyCSSS = function(options) {
 	var self = {
 		initialized : false,
 		sequence : 0,
+		prefix : "D",
 		including : [],
 		excluding : [ "-webkit-perspective-origin", "-webkit-transform-origin",
 				"-webkit-column-rule-color", "-webkit-font-smoothing",
@@ -13,6 +14,12 @@ var CopyCSSS = function(options) {
 				"-webkit-text-stroke-color",
 				"-webkit-text-decorations-in-effect" ]
 	};
+	function resetId() {
+		self.id = 0;
+	}
+	function generateId() {
+		return self.prefix + self.sequence++;
+	}
 
 	function importCrossOriginLink() {
 		var links = document.querySelectorAll("link[rel='stylesheet']");
@@ -145,7 +152,7 @@ var CopyCSSS = function(options) {
 	}
 
 	function getPseudoElementStyles(element, type) {
-		return null;
+		return {};
 	}
 
 	function copyRecurse(element) {
@@ -153,7 +160,7 @@ var CopyCSSS = function(options) {
 		if (element.prop("nodeType") !== Node.ELEMENT_NODE) {
 			return result;
 		}
-		var id = "SC" + (++self.sequence);
+		var id = generateId();
 		result.push({
 			"id" : id,
 			"computed" : getComputedStyles(element),
@@ -178,7 +185,7 @@ var CopyCSSS = function(options) {
 	function copySingled(element) {
 		element.children().remove();
 		// it.empty(); this will remove all sub element including text
-		var id = "SC" + (++self.sequence);
+		var id = generateId();
 		var result = [ {
 			"id" : id,
 			"computed" : getComputedStyles(element),
@@ -206,8 +213,10 @@ var CopyCSSS = function(options) {
 	};
 
 	pub.copyHTMLStyles = function(element, recurse) {
-		var hs = {charset: document.charset};
-		self.sequence = 0;
+		var hs = {
+			charset : document.charset
+		};
+		resetId();
 		var cloned = element.clone();
 		element.after(cloned);
 		if (recurse) {
@@ -242,8 +251,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_hover = styles[i]['pseudo_hover'];
+			Simplify.shorthand(pseudo_hover);
 			if (!jQuery.isEmptyObject(pseudo_hover)) {
-				Simplify.shorthand(pseudo_hover);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":hover" ],
 					rule : pseudo_hover,
@@ -251,8 +260,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_focus = styles[i]['pseudo_focus'];
+			Simplify.shorthand(pseudo_focus);
 			if (!jQuery.isEmptyObject(pseudo_focus)) {
-				Simplify.shorthand(pseudo_focus);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":focus" ],
 					rule : pseudo_focus,
@@ -260,8 +269,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_active = styles[i]['pseudo_active'];
+			Simplify.shorthand(pseudo_active);
 			if (!jQuery.isEmptyObject(pseudo_active)) {
-				Simplify.shorthand(pseudo_active);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":active" ],
 					rule : pseudo_active,
@@ -269,8 +278,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_before = styles[i]['pseudo_before'];
+			Simplify.shorthand(pseudo_before);
 			if (!jQuery.isEmptyObject(pseudo_before)) {
-				Simplify.shorthand(pseudo_before);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":before" ],
 					rule : pseudo_before,
@@ -278,8 +287,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_after = styles[i]['pseudo_after'];
+			Simplify.shorthand(pseudo_after);
 			if (!jQuery.isEmptyObject(pseudo_after)) {
-				Simplify.shorthand(pseudo_after);
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":after" ],
 					rule : pseudo_after,

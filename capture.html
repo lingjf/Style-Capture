@@ -37,10 +37,10 @@
 			//height : 99%;
 			//min-height : 99%;
 		}
-		.captured#outlook {
+		.captured#layout {
 			padding : 20px 10px;
 		}
-		.captured#htmlcss {
+		.captured#markup {
 			display: none;
 		}
 		#controls {
@@ -52,11 +52,17 @@
 			width : 64px;
 			height : 64px;
 		}
-		#controls #source.close, #controls #source.open:hover {
+		#controls #source.close {
 			background-image : url('image/source_green_default.png');
 		}
-		#controls #source.close:hover, #controls #source.open {
+		#controls #source.close:hover {
 			background-image : url('image/source_green_actived.png');
+		}
+		#controls #source.open {
+			background-image : url('image/layout_green_default.png');
+		}
+		#controls #source.open:hover {
+			background-image : url('image/layout_green_actived.png');
 		}
 		#controls #clipboard {
 			display : none;
@@ -77,8 +83,8 @@
 </head>
 
 <body>
-	<div class='captured' id='outlook'></div>
-	<div class='captured' id='htmlcss'>
+	<div class='captured' id='layout'></div>
+	<div class='captured' id='markup'>
 		<pre class="brush: css;"></pre>
 		<pre class="brush: html;"></pre>
 	</div>

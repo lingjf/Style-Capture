@@ -1,3 +1,4 @@
+
 var page = {
 	version : "1.0.0",
 	copyCSSS : null,

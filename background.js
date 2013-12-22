@@ -1,24 +1,24 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 var Captured = {};
 
 var TabState = {};
 
+var Activity = null;
+
 function updateState(tabId, state) {
-	if (state) {
+	if (tabId && state) {
 		TabState[tabId] = state;
 	}
 	var icon = "image/scissor19_default.png";
-	if (TabState[tabId] === "loading") {
-		icon = "image/scissor19_default.png";
-	} else if (TabState[tabId] === "loaded") {
-		icon = "image/scissor19_already.png";
-	} else if (TabState[tabId] === "capturing") {
-		icon = "image/scissor19_actived.png";
-	} else {
-		icon = "image/scissor19_default.png";
+	if (Activity) {
+		if (TabState[Activity] === "loading") {
+			icon = "image/scissor19_default.png";
+		} else if (TabState[Activity] === "complete") {
+			icon = "image/scissor19_already.png";
+		} else if (TabState[Activity] === "capturing") {
+			icon = "image/scissor19_actived.png";
+		} else {
+			icon = "image/scissor19_default.png";
+		}
 	}
 
 	chrome.browserAction.setIcon({
@@ -30,29 +30,31 @@ function updateState(tabId, state) {
 
 chrome.browserAction.onClicked.addListener(function(tab) {
 
-	if (!TabState[tab.id]) {
-		updateState(tab.id, "loading");
+	Activity = tab.id;
+
+	if (!TabState[Activity]) {
+		updateState(Activity, "loading");
 	}
 
-	if (TabState[tab.id] === "loading") {
+	if (TabState[Activity] === "loading") {
 		return;
-	} else if (TabState[tab.id] === "loaded") {
-		updateState(tab.id, "capturing");
+	} else if (TabState[Activity] === "complete") {
+		updateState(Activity, "capturing");
 		var to = setTimeout(function() {
-			updateState(tab.id, "loaded");
+			updateState(Activity, "complete");
 		}, 1000);
-		chrome.tabs.sendMessage(tab.id, {
+		chrome.tabs.sendMessage(Activity, {
 			action : "open"
 		}, function(response) {
 			clearTimeout(to);
 		});
-	} else if (TabState[tab.id] === "capturing") {
-		chrome.tabs.sendMessage(tab.id, {
+	} else if (TabState[Activity] === "capturing") {
+		chrome.tabs.sendMessage(Activity, {
 			action : "close"
 		});
-		updateState(tab.id, "loaded");
+		updateState(Activity, "complete");
 	} else {
-
+		console.log("Tab all in unknown status : " + TabState[Activity]);
 	}
 
 	// chrome.browserAction.setPopup({popup: "popup.html"});
@@ -63,19 +65,23 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 	// chrome.tabs.executeScript(tab.id, {file: 'script.js', allFrames: true});
 });
 
-chrome.tabs.onActivated.addListener(function(info) {
-	updateState(info.tabId);
+chrome.tabs.onCreated.addListener(function(tab) {
+	if (tab.highlighted) {
+		Activity = tab.id;
+	}
+	updateState(tab.id, tab.status);
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-	if (changeInfo.status == "loading") {
-		TabState[tabId] = "loading";
-	} else if (changeInfo.status == "complete") {
-		TabState[tabId] = "loaded";
-	}
 	if (tab.highlighted) {
-		updateState(tabId);
+		Activity = tabId;
 	}
+	updateState(tabId, changeInfo.status);
+});
+
+chrome.tabs.onActivated.addListener(function(info) {
+	Activity = info.tabId;
+	updateState();
 });
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
@@ -88,15 +94,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 			selected : true
 		});
 	} else if (message.action == "closed") {
-		// chrome.tabs.getCurrent() should not be used in background page
-		chrome.tabs.query({
-			active : true
-		}, function(tabs) {
-			TabState[sender.tab.id] = "loaded";
-			if (tabs[0].id === sender.tab.id) {
-				updateState(tabs[0].id);
-			}
-		});
+		updateState(sender.tab.id, "complete");
 	}
 });
 
@@ -107,14 +105,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		wins.forEach(function(win) {
 			win.tabs.forEach(function(tab) {
 				if (tab != undefined && tab.url.indexOf('chrome') !== 0) {
-					if (tab.status == "loading") {
-						TabState[tab.id] = "loading";
-					} else if (tab.status == "complete") {
-						TabState[tab.id] = "loaded";
-					}
 					if (tab.highlighted) {
-						updateState(tab.id);
+						Activity = tab.id;
 					}
+					updateState(tab.id, tab.status);
 				}
 			});
 		});

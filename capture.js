@@ -39,16 +39,16 @@ $(document).ready(
 			chrome.runtime.getBackgroundPage(function(backgroundPage) {
 				Captured = backgroundPage.Captured;
 
-				$('.captured#outlook').append(" " + Captured.html + " ");
+				$('.captured#layout').append(" " + Captured.html + " ");
 
 				Captured.css = "<style>\n"
 						+ CopyCSSS().simplifyStyles(Captured.styles)
 						+ "\n</style>";
 				$('head').append(Captured.css);
 
-				$('.captured#htmlcss pre:nth-child(1)').html(Captured.css);
+				$('.captured#markup pre:nth-child(1)').html(Captured.css);
 
-				$('.captured#htmlcss pre:nth-child(2)').html(Captured.html);
+				$('.captured#markup pre:nth-child(2)').html(Captured.html);
 
 				SyntaxHighlighter.highlight();
 
@@ -57,8 +57,8 @@ $(document).ready(
 
 			$('#controls #source').click(function() {
 				$(this).toggleClass('close open');
-				$('.captured#outlook').toggle();
-				$('.captured#htmlcss').toggle();
+				$('.captured#layout').toggle();
+				$('.captured#markup').toggle();
 				$('#controls #clipboard').removeClass('copied');
 				$('#controls #clipboard').toggle();
 				$('#controls #download').removeClass('downloaded');
