@@ -82,6 +82,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	if (message.action == "capture") {
 		Captured.html = message.html;
 		Captured.styles = message.styles;
+		Captured.charset = message.charset;
 		chrome.tabs.create({
 			url : 'capture.html',
 			selected : true

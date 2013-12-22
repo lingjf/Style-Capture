@@ -206,7 +206,7 @@ var CopyCSSS = function(options) {
 	};
 
 	pub.copyHTMLStyles = function(element, recurse) {
-		var hs = {};
+		var hs = {charset: document.charset};
 		self.sequence = 0;
 		var cloned = element.clone();
 		element.after(cloned);

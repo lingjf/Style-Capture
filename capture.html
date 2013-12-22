@@ -69,7 +69,7 @@
 			display : none;
 			background-image : url('image/download_green_default.png');
 		}
-		#controls #download:hover {
+		#controls #download:hover, #controls #download.downloaded {
 			background-image : url('image/download_green_actived.png');
 		}
 	</style>
@@ -83,7 +83,7 @@
 		<pre class="brush: html;"></pre>
 	</div>
 	<div id='controls'> 
-		<div id='download'> </div>
+		<div id='download'><a style='display:block;width:100%;height:100%;'></a></div>
 		<div id='clipboard'> </div>
 		<div id='source' class='close'> </div>
 	</div>
