@@ -28,8 +28,44 @@ function updateState(tabId, state) {
 	// chrome.browserAction.setBadgeText({ text : "" });
 }
 
-chrome.browserAction.onClicked.addListener(function(tab) {
 
+document.addEventListener('DOMContentLoaded', function() {
+	chrome.windows.getAll({
+		'populate' : true
+	}, function(wins) {
+		wins.forEach(function(win) {
+			win.tabs.forEach(function(tab) {
+				if (tab != undefined && tab.url.indexOf('chrome') !== 0) {
+					if (tab.highlighted) {
+						Activity = tab.id;
+					}
+					updateState(tab.id, tab.status);
+				}
+			});
+		});
+	});
+});
+
+chrome.tabs.onCreated.addListener(function(tab) {
+	if (tab.highlighted) {
+		Activity = tab.id;
+	}
+	updateState(tab.id, tab.status);
+});
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+	if (tab.highlighted) {
+		Activity = tabId;
+	}
+	updateState(tabId, changeInfo.status);
+});
+
+chrome.tabs.onActivated.addListener(function(info) {
+	Activity = info.tabId;
+	updateState();
+});
+
+chrome.browserAction.onClicked.addListener(function(tab) {
 	Activity = tab.id;
 
 	if (!TabState[Activity]) {
@@ -54,7 +90,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 		});
 		updateState(Activity, "complete");
 	} else {
-		console.log("Tab all in unknown status : " + TabState[Activity]);
+		console.log("Tab fall in unknown status : " + TabState[Activity]);
 	}
 
 	// chrome.browserAction.setPopup({popup: "popup.html"});
@@ -65,24 +101,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 	// chrome.tabs.executeScript(tab.id, {file: 'script.js', allFrames: true});
 });
 
-chrome.tabs.onCreated.addListener(function(tab) {
-	if (tab.highlighted) {
-		Activity = tab.id;
-	}
-	updateState(tab.id, tab.status);
-});
-
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-	if (tab.highlighted) {
-		Activity = tabId;
-	}
-	updateState(tabId, changeInfo.status);
-});
-
-chrome.tabs.onActivated.addListener(function(info) {
-	Activity = info.tabId;
-	updateState();
-});
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	if (message.action == "capture") {
@@ -98,19 +116,3 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	}
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-	chrome.windows.getAll({
-		'populate' : true
-	}, function(wins) {
-		wins.forEach(function(win) {
-			win.tabs.forEach(function(tab) {
-				if (tab != undefined && tab.url.indexOf('chrome') !== 0) {
-					if (tab.highlighted) {
-						Activity = tab.id;
-					}
-					updateState(tab.id, tab.status);
-				}
-			});
-		});
-	});
-});
