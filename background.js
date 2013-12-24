@@ -4,6 +4,44 @@ var TabState = {};
 
 var Activity = null;
 
+var Options = {
+	get : function(keys) {
+		var result = {};
+		if (!keys || keys.indexOf("ShowSelectedTagChain") > -1) {
+			if (!window.localStorage["ShowSelectedTagChain"]) {
+				window.localStorage["ShowSelectedTagChain"] = "true";
+			}
+			result["ShowSelectedTagChain"] = window.localStorage["ShowSelectedTagChain"];
+		}
+		if (!keys || keys.indexOf("styled") > -1) {
+			if (!window.localStorage["styled"]) {
+				window.localStorage["styled"] = "Computed_Style";
+			}
+			result["styled"] = window.localStorage["styled"];
+		}
+		if (!keys || keys.indexOf("Simplification") > -1) {
+			if (!window.localStorage["Simplification"]) {
+				window.localStorage["Simplification"] = "true";
+			}
+			result["Simplification"] = window.localStorage["Simplification"];
+		}
+		if (!keys || keys.indexOf("RemoveDefault") > -1) {
+			if (!window.localStorage["RemoveDefault"]) {
+				window.localStorage["RemoveDefault"] = "true";
+			}
+			result["RemoveDefault"] = window.localStorage["RemoveDefault"];
+		}
+
+		return result;
+	},
+	set : function(kvalues) {
+		for (key in kvalues) {
+			console.log(key, kvalues[key]);
+			window.localStorage[key] = kvalues[key];
+		}
+	}
+};
+
 function updateState(tabId, state) {
 	if (tabId && state) {
 		TabState[tabId] = state;
@@ -27,7 +65,6 @@ function updateState(tabId, state) {
 
 	// chrome.browserAction.setBadgeText({ text : "" });
 }
-
 
 document.addEventListener('DOMContentLoaded', function() {
 	chrome.windows.getAll({
@@ -80,7 +117,8 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 			updateState(Activity, "complete");
 		}, 1000);
 		chrome.tabs.sendMessage(Activity, {
-			action : "open"
+			action : "open",
+			ShowSelectedTagChain : Options.get()["ShowSelectedTagChain"],
 		}, function(response) {
 			clearTimeout(to);
 		});
@@ -101,7 +139,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 	// chrome.tabs.executeScript(tab.id, {file: 'script.js', allFrames: true});
 });
 
-
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	if (message.action == "capture") {
 		Captured.html = message.html;
@@ -115,4 +152,3 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 		updateState(sender.tab.id, "complete");
 	}
 });
-

@@ -26,10 +26,14 @@ function initContentScript() {
 				switch (message.action) {
 				case "open":
 					page.copyCSSS.prepare();
+					page.domOutline.update({"showchain": message.ShowSelectedTagChain === "true"});
 					page.domOutline.start();
 					sendResponse({
 						count : "2"
 					});
+					break;
+				case "update":
+					page.domOutline.update({"showchain": message.ShowSelectedTagChain === "true"});
 					break;
 				case "close":
 					page.domOutline.stop();

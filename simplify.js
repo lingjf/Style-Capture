@@ -787,5 +787,96 @@ var Simplify = (function() {
 		shorthand_color(style);
 	};
 
+	pub.simplifyAuthorStyles = function(styles, simplify, removeDefault) {
+		var rules = [], simplified = [];
+		for ( var i in styles) {
+			var author = styles[i]['author'];
+			if (simplify)
+				this.shorthand(author);
+			if (!jQuery.isEmptyObject(author)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] ],
+					rule : author,
+					json : JSON.stringify(author)
+				});
+			}
+			var pseudo_hover = styles[i]['pseudo_hover'];
+			if (simplify)
+				this.shorthand(pseudo_hover);
+			if (!jQuery.isEmptyObject(pseudo_hover)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":hover" ],
+					rule : pseudo_hover,
+					json : JSON.stringify(pseudo_hover)
+				});
+			}
+			var pseudo_focus = styles[i]['pseudo_focus'];
+			if (simplify)
+				this.shorthand(pseudo_focus);
+			if (!jQuery.isEmptyObject(pseudo_focus)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":focus" ],
+					rule : pseudo_focus,
+					json : JSON.stringify(pseudo_focus)
+				});
+			}
+			var pseudo_active = styles[i]['pseudo_active'];
+			if (simplify)
+				this.shorthand(pseudo_active);
+			if (!jQuery.isEmptyObject(pseudo_active)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":active" ],
+					rule : pseudo_active,
+					json : JSON.stringify(pseudo_active)
+				});
+			}
+			var pseudo_before = styles[i]['pseudo_before'];
+			if (simplify)
+				this.shorthand(pseudo_before);
+			if (!jQuery.isEmptyObject(pseudo_before)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":before" ],
+					rule : pseudo_before,
+					json : JSON.stringify(pseudo_before)
+				});
+			}
+			var pseudo_after = styles[i]['pseudo_after'];
+			if (simplify)
+				this.shorthand(pseudo_after);
+			if (!jQuery.isEmptyObject(pseudo_after)) {
+				rules.push({
+					selector : [ "#" + styles[i]['id'] + ":after" ],
+					rule : pseudo_after,
+					json : JSON.stringify(pseudo_after)
+				});
+			}
+		}
+
+		for ( var i in rules) {
+			var merged = false;
+			for ( var j in simplified) {
+				if (simplified[j].json === rules[i].json) {
+					simplified[j].selector.push(rules[i].selector[0]);
+					merged = true;
+					break;
+				}
+			}
+			if (!merged) {
+				simplified.push(rules[i]);
+			}
+		}
+
+		var result = "";
+		for ( var i in simplified) {
+			result += simplified[i].selector.join(", ") + " {\n";
+			for ( var j in simplified[i].rule) {
+				result += "    " + j + ": " + simplified[i].rule[j] + ";\n";
+			}
+			result += "}\n";
+		}
+		return result;
+
+	};
+
 	return pub;
 })();

@@ -16,6 +16,7 @@ var DomOutline = function(options) {
 		omitted : [ 'HTML', 'HEAD', 'BODY' ],
 		actived : false,
 		initialized : false,
+		showchain : true,
 		frozen : false,
 		elements : {},
 		selected : null,
@@ -98,12 +99,14 @@ var DomOutline = function(options) {
 		var label_text = "";
 		if (pub.selected) {
 			pos = pub.selected.get(0).getBoundingClientRect();
-			pub.selected.parents().each(
-					function(index) {
-						label_text = "<div class='DomOutline_node' rel='"
-								+ index + "'>" + this.tagName.toLowerCase()
-								+ "</div>" + label_text;
-					});
+			if (self.showchain) {
+				pub.selected.parents().each(
+						function(index) {
+							label_text = "<div class='DomOutline_node' rel='"
+									+ index + "'>" + this.tagName.toLowerCase()
+									+ "</div>" + label_text;
+						});
+			}
 			label_text = label_text + "<div class='DomOutline_node'>"
 					+ pub.selected.get(0).tagName.toLowerCase() + "</div>";
 			// label_text += "<div class='DomOutline_node' cap='singled'>
@@ -133,7 +136,7 @@ var DomOutline = function(options) {
 		// });
 		// $("div.DomOutline_node[cap='recurse']").click(function() {
 		// self.onCaptured(pub.selected, true);
-		//		});
+		// });
 		self.elements.top.css({
 			top : Math.max(0, top - b),
 			left : pos.left - b,
@@ -198,7 +201,7 @@ var DomOutline = function(options) {
 
 	function stepSelection(ud) {
 		var index = -1;
-		for ( var i = 0; i < self.stacked.length; i++) {
+		for (var i = 0; i < self.stacked.length; i++) {
 			if (pub.selected.is(self.stacked[i])) {
 				index = i;
 				break;
@@ -267,6 +270,14 @@ var DomOutline = function(options) {
 		jQuery('body').unbind('.DomOutline');
 		if (self.onClosed) {
 			self.onClosed();
+		}
+	};
+
+	pub.update = function(options) {
+		for ( var i in options) {
+			if (i === "showchain") {
+				self.showchain = options[i];
+			}
 		}
 	};
 

@@ -1,4 +1,5 @@
 var Captured;
+var Options;
 
 SyntaxHighlighter.defaults['toolbar'] = false;
 SyntaxHighlighter.defaults['ruler'] = true;
@@ -38,12 +39,25 @@ $(document).ready(
 		function() {
 			chrome.runtime.getBackgroundPage(function(backgroundPage) {
 				Captured = backgroundPage.Captured;
+				Options = backgroundPage.Options;
 
 				$('.captured#layout').append(" " + Captured.html + " ");
 
-				Captured.css = "<style>\n"
-						+ CopyCSSS().simplifyStyles(Captured.styles)
-						+ "\n</style>";
+				var opt = Options.get();
+				if (opt["styled"] === "Computed_Style") {
+					Captured.css = "<style>\n"
+							+ CopyCSSS().simplifyStyles(Captured.styles,
+									opt["Simplification"] === "true",
+									opt["RemoveDefault"] === "true")
+							+ "\n</style>";
+				} else {
+					Captured.css = "<style>\n"
+							+ Simplify.simplifyAuthorStyles(Captured.styles,
+									opt["Simplification"] === "true",
+									opt["RemoveDefault"] === "true")
+							+ "\n</style>";
+				}
+
 				$('head').append(Captured.css);
 
 				$('.captured#markup pre:nth-child(1)').html(Captured.css);
@@ -69,7 +83,7 @@ $(document).ready(
 				copytoClipboard();
 				$(this).addClass('copied');
 			});
-			
+
 			$('#controls #download').click(function() {
 				$(this).addClass('downloaded');
 			});

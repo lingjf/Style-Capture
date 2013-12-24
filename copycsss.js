@@ -82,7 +82,12 @@ var CopyCSSS = function(options) {
 		return getComputedStyles(element);
 	}
 
-	function getUserStyles(element) {
+	function getAuthorStyles(element) {
+		/*
+		 * There is a BIG drawback : Can't catch inherited styles. for example:
+		 * font-family or font-size are set in body level, it will impact all
+		 * elements, in this approach font-family or font-size are missing.
+		 */
 		var candidates = [];
 		var product = {};
 		var sheets = document.styleSheets;
@@ -164,6 +169,7 @@ var CopyCSSS = function(options) {
 		result.push({
 			"id" : id,
 			"computed" : getComputedStyles(element),
+			"author" : getAuthorStyles(element),
 			"pseudo_hover" : getPseudoClassStyles(element, "hover"),
 			"pseudo_focus" : getPseudoClassStyles(element, "focus"),
 			"pseudo_active" : getPseudoClassStyles(element, "active"),
@@ -189,6 +195,7 @@ var CopyCSSS = function(options) {
 		var result = [ {
 			"id" : id,
 			"computed" : getComputedStyles(element),
+			"author" : getAuthorStyles(element),
 			"pseudo_hover" : getPseudoClassStyles(element, "hover"),
 			"pseudo_focus" : getPseudoClassStyles(element, "focus"),
 			"pseudo_active" : getPseudoClassStyles(element, "active"),
@@ -229,18 +236,24 @@ var CopyCSSS = function(options) {
 		return hs;
 	};
 
-	pub.simplifyStyles = function(styles) {
+	pub.simplifyStyles = function(styles, simplify, removeDefault) {
 		var rules = [], simplified = [];
 		for ( var i in styles) {
-			var computed = {};
-			Simplify.shorthand(styles[i]['computed']);
-			var defaults = getDefaultStyles($("#" + styles[i]['id']));
-			Simplify.shorthand(defaults);
-			for ( var j in styles[i]['computed']) {
-				var modified = styles[i]['computed'][j] !== defaults[j];
-				if (self.including.indexOf(j) > -1
-						|| (modified && self.excluding.indexOf(j) < 0)) {
-					computed[j] = styles[i]['computed'][j];
+			var computed = styles[i]['computed'];
+			if (simplify)
+				Simplify.shorthand(computed);
+			if (removeDefault) {
+				var original = computed;
+				computed = {};
+				var defaults = getDefaultStyles($("#" + styles[i]['id']));
+				if (simplify)
+					Simplify.shorthand(defaults);
+				for ( var j in original) {
+					var modified = original[j] !== defaults[j];
+					if (self.including.indexOf(j) > -1
+							|| (modified && self.excluding.indexOf(j) < 0)) {
+						computed[j] = original[j];
+					}
 				}
 			}
 			if (!jQuery.isEmptyObject(computed)) {
@@ -251,7 +264,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_hover = styles[i]['pseudo_hover'];
-			Simplify.shorthand(pseudo_hover);
+			if (simplify)
+				Simplify.shorthand(pseudo_hover);
 			if (!jQuery.isEmptyObject(pseudo_hover)) {
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":hover" ],
@@ -260,7 +274,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_focus = styles[i]['pseudo_focus'];
-			Simplify.shorthand(pseudo_focus);
+			if (simplify)
+				Simplify.shorthand(pseudo_focus);
 			if (!jQuery.isEmptyObject(pseudo_focus)) {
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":focus" ],
@@ -269,7 +284,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_active = styles[i]['pseudo_active'];
-			Simplify.shorthand(pseudo_active);
+			if (simplify)
+				Simplify.shorthand(pseudo_active);
 			if (!jQuery.isEmptyObject(pseudo_active)) {
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":active" ],
@@ -278,7 +294,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_before = styles[i]['pseudo_before'];
-			Simplify.shorthand(pseudo_before);
+			if (simplify)
+				Simplify.shorthand(pseudo_before);
 			if (!jQuery.isEmptyObject(pseudo_before)) {
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":before" ],
@@ -287,7 +304,8 @@ var CopyCSSS = function(options) {
 				});
 			}
 			var pseudo_after = styles[i]['pseudo_after'];
-			Simplify.shorthand(pseudo_after);
+			if (simplify)
+				Simplify.shorthand(pseudo_after);
 			if (!jQuery.isEmptyObject(pseudo_after)) {
 				rules.push({
 					selector : [ "#" + styles[i]['id'] + ":after" ],
